@@ -11,8 +11,8 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float gravity = 30.0f;
 
     [Header("Look Parameters")]
-    [SerializeField, Range(1, 10)] private float lookSpeedX = 2.0f;
-    [SerializeField, Range(1, 10)] private float lookSpeedY = 2.0f;
+    [SerializeField, Range(0.1f, 10f)] private float lookSpeedX = 0.85f;
+    [SerializeField, Range(0.1f, 10f)] private float lookSpeedY = 0.85f;
     [SerializeField, Range(1, 180)] private float upperLookLimit = 80.0f;
     [SerializeField, Range(1, 180)] private float lowerLookLimit = 80.0f;
 
@@ -54,7 +54,10 @@ public class FirstPersonController : MonoBehaviour
 
     private void HandleMouseLook()
     {
-
+        rotationX -= Input.GetAxis("Mouse Y") * lookSpeedY;
+        rotationX = Mathf.Clamp(rotationX, -upperLookLimit, lowerLookLimit);
+        playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
+        transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeedX, 0);
     }
 
     private void ApplyFinalMovements()
