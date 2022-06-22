@@ -5,7 +5,7 @@ using UnityEngine;
 public class FirstPersonController : MonoBehaviour
 {
     public bool CanMove { get; private set; } = true;
-    private bool IsSprinting => canSprint && Input.GetKey(sprintKey);
+    private bool IsSprinting => canSprint && Input.GetKey(sprintKey) && !IsSliding;
     private bool ShouldJump => characterController.isGrounded && Input.GetKey(jumpKey);
     private bool ShouldCrouch => Input.GetKeyDown(crouchKey) && !duringCrouchAnimation && characterController.isGrounded;
 
@@ -14,6 +14,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private bool canJump = true;
     [SerializeField] private bool canCrouch = true;
     [SerializeField] private bool canUseHeadbob = true;
+    [SerializeField] private bool willSlideOnSlopes = true;
 
     [Header("Controls")]
     [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
@@ -24,6 +25,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] private float walkSpeed = 3.0f;
     [SerializeField] private float sprintSpeed = 6.0f;
     [SerializeField] private float crouchSpeed = 1.5f;
+    [SerializeField] private float slopeSpeed = 9.0f;
 
     [Header("Look Parameters")]
     [SerializeField, Range(0.1f, 10f)] private float lookSpeedX = 0.85f;
@@ -54,6 +56,25 @@ public class FirstPersonController : MonoBehaviour
     private float defaultYPos = 0;
     private float timer;
 
+    // SLIDING PARAMETERS
+    private Vector3 hitPointNormal;
+    private bool IsSliding 
+    {
+        get
+        {
+            if(characterController.isGrounded && Physics.Raycast(transform.position, Vector3.down, out RaycastHit slopeHit, 1.5f))
+            {
+                hitPointNormal = slopeHit.normal;
+                return Vector3.Angle(hitPointNormal, Vector3.up) > characterController.slopeLimit;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+
     private Camera playerCamera;
     private CharacterController characterController;
 
@@ -78,7 +99,7 @@ public class FirstPersonController : MonoBehaviour
             HandleMovementInput();
             HandleMouseLook();
 
-            if(canJump && !isCrouching)
+            if(canJump && !isCrouching && !IsSliding)
                 HandleJump();
 
             if(canCrouch)
@@ -144,6 +165,9 @@ public class FirstPersonController : MonoBehaviour
     {
         if(!characterController.isGrounded)
             moveDirection.y -= gravity * Time.deltaTime;
+
+        if(willSlideOnSlopes && IsSliding)
+            moveDirection += new Vector3(hitPointNormal.x, -hitPointNormal.y, hitPointNormal.z) * slopeSpeed;
 
         characterController.Move(moveDirection * Time.deltaTime);
     }
