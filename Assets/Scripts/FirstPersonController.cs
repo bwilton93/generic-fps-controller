@@ -24,14 +24,44 @@ public class FirstPersonController : MonoBehaviour
 
     private float rotationX = 0;
 
-    Void Awake()
+    void Awake()
     {
-        
+        playerCamera = GetComponentInChildren<Camera>();
+        characterController = GetComponent<CharacterController>();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        if(CanMove)
+        {
+            HandleMovementInput();
+            HandleMouseLook();
+
+            ApplyFinalMovements();
+        }
+    }
+
+    private void HandleMovementInput()
+    {
+        currentInput = new Vector2(walkSpeed * Input.GetAxis("Vertical"), walkSpeed * Input.GetAxis("Horizontal"));
+
+        float moveDirectionY = moveDirection.y;
+        moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x) + (transform.TransformDirection(Vector3.right) * currentInput.y);
+        moveDirection.y = moveDirectionY;
+    }
+
+    private void HandleMouseLook()
+    {
+
+    }
+
+    private void ApplyFinalMovements()
+    {
+        if(!characterController.isGrounded)
+            moveDirection.y -= gravity * Time.deltaTime;
+
+        characterController.Move(moveDirection * Time.deltaTime);
     }
 }
