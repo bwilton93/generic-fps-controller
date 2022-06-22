@@ -93,12 +93,16 @@ public class FirstPersonController : MonoBehaviour
 
     private void HandleMovementInput()
     {
-        currentInput = new Vector2(
-            (isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Vertical"), 
-            (isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed) * Input.GetAxis("Horizontal"));
+        currentInput = new Vector2(Input.GetAxis("Vertical"), Input.GetAxis("Horizontal"));
+
+        float speedModifier = isCrouching ? crouchSpeed : IsSprinting ? sprintSpeed : walkSpeed;
 
         float moveDirectionY = moveDirection.y;
-        moveDirection = (transform.TransformDirection(Vector3.forward) * currentInput.x) + (transform.TransformDirection(Vector3.right) * currentInput.y);
+        
+        Vector3 forwardMovement = transform.forward * currentInput.x;
+        Vector3 sideMovement = transform.right * currentInput.y;
+        
+        moveDirection = Vector3.ClampMagnitude(forwardMovement + sideMovement, 1.0f) * speedModifier;
         moveDirection.y = moveDirectionY;
     }
 
